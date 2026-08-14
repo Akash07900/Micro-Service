@@ -1,5 +1,6 @@
 package com.example.productservice.controller;
 
+import com.example.productservice.dto.ProductResponse;
 import com.example.productservice.model.Product;
 import com.example.productservice.service.ProductService;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +18,27 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public List<ProductResponse> getAllProducts() {
+
+        return productService.getAllProducts()
+                .stream()
+                .map(product -> new ProductResponse(
+                        product.getId(),
+                        product.getName(),
+                        product.getPrice()
+                ))
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Product getProductById(@PathVariable Long id) {
+    public ProductResponse getProductById(@PathVariable Long id) {
 
-        return productService.getProductById(id);
+        Product product = productService.getProductById(id);
+
+        return new ProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getPrice()
+        );
     }
 }
