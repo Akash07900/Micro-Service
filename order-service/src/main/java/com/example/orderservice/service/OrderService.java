@@ -1,8 +1,9 @@
 package com.example.orderservice.service;
 
+import com.example.orderservice.dto.ProductResponse;
 import com.example.orderservice.exception.ProductNotFoundException;
 import com.example.orderservice.model.Order;
-import com.example.orderservice.model.Product;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
@@ -11,23 +12,28 @@ import org.springframework.web.client.RestClient;
 public class OrderService {
 
     private final RestClient.Builder restClientBuilder;
+    private final String productServiceUrl;
 
-    public OrderService(RestClient.Builder restClientBuilder) {
+    public OrderService(
+            RestClient.Builder restClientBuilder,
+            @Value("${product.service.url}") String productServiceUrl) {
+
         this.restClientBuilder = restClientBuilder;
+        this.productServiceUrl = productServiceUrl;
     }
 
     public String createOrder(Order order) {
 
         RestClient restClient = restClientBuilder.build();
 
-        Product product;
+        ProductResponse product;
 
         try {
             product = restClient.get()
-                    .uri("http://localhost:8082/api/products/"
+                    .uri(productServiceUrl + "/api/products/"
                             + order.getProductId())
                     .retrieve()
-                    .body(Product.class);
+                    .body(ProductResponse.class);
 
         } catch (HttpClientErrorException.NotFound ex) {
 
