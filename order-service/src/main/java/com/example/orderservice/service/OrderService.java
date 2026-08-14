@@ -1,28 +1,40 @@
 package com.example.orderservice.service;
 
-import com.example.orderservice.dto.ProductResponse;
+import com.example.orderservice.exception.ProductNotFoundException;
 import com.example.orderservice.model.Order;
+import com.example.orderservice.model.Product;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Service
 public class OrderService {
 
-    private final RestClient restClient;
+    private final RestClient.Builder restClientBuilder;
 
-    public OrderService(RestClient restClient) {
-        this.restClient = restClient;
+    public OrderService(RestClient.Builder restClientBuilder) {
+        this.restClientBuilder = restClientBuilder;
     }
 
     public String createOrder(Order order) {
 
-        ProductResponse product = restClient.get()
-                .uri("http://localhost:8082/api/products/" + order.getProductId())
-                .retrieve()
-                .body(ProductResponse.class);
+        RestClient restClient = restClientBuilder.build();
 
-        if (product == null) {
-            return "Product not found";
+        Product product;
+
+        try {
+            product = restClient.get()
+                    .uri("http://localhost:8082/api/products/"
+                            + order.getProductId())
+                    .retrieve()
+                    .body(Product.class);
+
+        } catch (HttpClientErrorException.NotFound ex) {
+
+            throw new ProductNotFoundException(
+                    "Product not found with id: "
+                            + order.getProductId()
+            );
         }
 
         double totalPrice =
